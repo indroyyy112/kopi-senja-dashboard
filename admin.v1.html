@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Kopi Senja Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+  :root { --accent:#B5542D; --accent-soft:#F6E7DF; --bg:#F5F3EF; --surface:#FFFFFF; --text-primary:#1C1917; --text-secondary:#6B645D; --text-muted:#A39B93; --border:#ECE7E1; --good-bg:#E7F3EA; --good-text:#2F6B40; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; color: var(--text-primary); min-height: 100vh; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--text-secondary); font-size: 14px; margin: 0 0 28px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+  .field-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); margin: 0 0 6px; display: block; letter-spacing: .3px; }
+  .field-input, .field-textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; font-family: inherit; font-size: 14px; color: var(--text-primary); background: var(--bg); margin-bottom: 16px; }
+  .field-textarea { min-height: 180px; resize: vertical; font-family: Menlo, monospace; font-size: 12.5px; line-height: 1.6; }
+  button { font-family: inherit; cursor: pointer; }
+  .btn { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 700; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text-primary); border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+  .status { font-size: 13px; margin-top: 10px; min-height: 18px; }
+  .status.ok { color: var(--good-text); }
+  .status.err { color: #B3261E; }
+  #login-card { max-width: 360px; margin: 80px auto 0; text-align: center; }
+  #login-card input { text-align: left; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .feedback-item { border-bottom: 1px solid var(--border); padding: 14px 0; }
+  .feedback-item:last-child { border-bottom: none; }
+  .feedback-date { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .feedback-msg { font-size: 14px; line-height: 1.5; }
+  .empty { color: var(--text-muted); font-size: 13px; padding: 12px 0; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="login-card" class="card">
+    <h1>Sign in</h1>
+    <p class="sub">Owner/staff login for this store's dashboard.</p>
+    <input class="field-input" id="login-email" type="email" placeholder="you@yourstore.com">
+    <input class="field-input" id="login-password" type="password" placeholder="Password">
+    <button class="btn" style="width:100%;" onclick="doLogin()">Sign in</button>
+    <div class="status" id="login-status"></div>
+    <p class="sub" style="margin-top:16px;">No account yet? Create one in your Supabase dashboard under Authentication → Users, then sign in here.</p>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="topbar">
+      <div>
+        <h1>Store dashboard</h1>
+        <p class="sub" id="whoami"></p>
+      </div>
+      <button class="btn-ghost" onclick="doLogout()">Sign out</button>
+    </div>
+
+    <div class="card">
+      <label class="field-label">STORE NAME</label>
+      <input class="field-input" id="f-storename">
+      <label class="field-label">TAGLINE / ADDRESS</label>
+      <input class="field-input" id="f-tagline">
+      <label class="field-label">WI-FI SSID</label>
+      <input class="field-input" id="f-ssid">
+      <label class="field-label">WI-FI PASSWORD</label>
+      <input class="field-input" id="f-pass">
+      <label class="field-label">GOOGLE REVIEW LINK</label>
+      <input class="field-input" id="f-review">
+      <label class="field-label">MENU — one item per line: Category | Name | Price | Description | Tags</label>
+      <textarea class="field-textarea" id="f-menu"></textarea>
+      <button class="btn" onclick="saveConfig()">💾 Save changes</button>
+      <div class="status" id="save-status"></div>
+    </div>
+
+    <div class="card">
+      <h1 style="font-size:16px;">Feedback received</h1>
+      <div id="feedback-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  async function doLogin() {
+    var email = document.getElementById('login-email').value.trim();
+    var password = document.getElementById('login-password').value;
+    var statusEl = document.getElementById('login-status');
+    statusEl.className = 'status'; statusEl.textContent = 'Signing in…';
+    var { error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+    if (error) { statusEl.className = 'status err'; statusEl.textContent = error.message; return; }
+    statusEl.textContent = '';
+    showDashboard();
+  }
+  async function doLogout() {
+    await supabaseClient.auth.signOut();
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('login-card').classList.remove('hidden');
+  }
+
+  async function showDashboard() {
+    var { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+    document.getElementById('login-card').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('whoami').textContent = 'Signed in as ' + user.email;
+    await loadConfigIntoForm();
+    await loadFeedback();
+  }
+
+  async function loadConfigIntoForm() {
+    var { data, error } = await supabaseClient.from('store_config').select('*').eq('id', 'default').single();
+    if (error || !data) { console.error(error); return; }
+    document.getElementById('f-storename').value = data.store_name || '';
+    document.getElementById('f-tagline').value = data.tagline || '';
+    document.getElementById('f-ssid').value = data.wifi_ssid || '';
+    document.getElementById('f-pass').value = data.wifi_password || '';
+    document.getElementById('f-review').value = data.review_link || '';
+    document.getElementById('f-menu').value = data.menu_text || '';
+  }
+
+  async function saveConfig() {
+    var statusEl = document.getElementById('save-status');
+    statusEl.className = 'status'; statusEl.textContent = 'Saving…';
+    var payload = {
+      store_name: document.getElementById('f-storename').value.trim() || 'My Store',
+      tagline: document.getElementById('f-tagline').value.trim(),
+      wifi_ssid: document.getElementById('f-ssid').value.trim(),
+      wifi_password: document.getElementById('f-pass').value.trim(),
+      review_link: document.getElementById('f-review').value.trim(),
+      menu_text: document.getElementById('f-menu').value,
+      updated_at: new Date().toISOString()
+    };
+    var { error } = await supabaseClient.from('store_config').update(payload).eq('id', 'default');
+    if (error) { statusEl.className = 'status err'; statusEl.textContent = 'Could not save: ' + error.message; return; }
+    statusEl.className = 'status ok'; statusEl.textContent = 'Saved — the customer page updates automatically.';
+  }
+
+  async function loadFeedback() {
+    var list = document.getElementById('feedback-list');
+    var { data, error } = await supabaseClient.from('feedback').select('*').order('created_at', { ascending: false }).limit(50);
+    if (error) { list.innerHTML = '<div class="empty">Could not load feedback.</div>'; console.error(error); return; }
+    if (!data || !data.length) { list.innerHTML = '<div class="empty">No feedback yet.</div>'; return; }
+    list.innerHTML = data.map(function(f) {
+      var d = new Date(f.created_at);
+      return '<div class="feedback-item"><div class="feedback-date">' + d.toLocaleString() + '</div><div class="feedback-msg">' + f.message.replace(/</g,'&lt;') + '</div></div>';
+    }).join('');
+  }
+
+  // Restore session on refresh
+  (async function init() {
+    var { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) showDashboard();
+  })();
+</script>
+</body>
+</html>
