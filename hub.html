@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Smart Table Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="config.js"></script>
+  <style>
+    :root {
+      --bg: #0F1210;
+      --surface: #181D19;
+      --surface-card: #202621;
+      --surface-elevated: #28302A;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(74, 222, 128, 0.25);
+      --text: #F3F5F2;
+      --text-muted: #9AA39A;
+      --text-sub: #6E776E;
+      --accent: #3ED572;
+      --accent-glow: rgba(62, 213, 114, 0.25);
+      --accent-light: #E8FBEF;
+      --gold: #FFB800;
+      --red: #FF5A5A;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --font: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(62, 213, 114, 0.15), transparent),
+        radial-gradient(circle at 80% 80%, rgba(255, 184, 0, 0.04), transparent);
+      background-attachment: fixed;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-bottom: 90px;
+    }
+
+    /* Header & Hero */
+    .hero {
+      padding: 32px 20px 24px;
+      position: relative;
+    }
+    .top-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .table-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(62, 213, 114, 0.12);
+      border: 1px solid rgba(62, 213, 114, 0.3);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .table-pill svg { width: 14px; height: 14px; fill: currentColor; }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .store-brand {
+      text-align: left;
+    }
+    .store-brand h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      color: #FFFFFF;
+    }
+    .store-brand p {
+      color: var(--text-muted);
+      font-size: 13.5px;
+      line-height: 1.4;
+    }
+
+    /* Action Buttons (Wi-Fi, Review, Feedback) */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 0 20px 20px;
+    }
+    .action-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--text);
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .action-btn:active {
+      transform: scale(0.96);
+      background: var(--surface-elevated);
+      border-color: var(--border-accent);
+    }
+    .action-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .action-icon.wifi { background: rgba(62, 213, 114, 0.12); color: var(--accent); border-color: rgba(62, 213, 114, 0.2); }
+    .action-icon.star { background: rgba(255, 184, 0, 0.12); color: var(--gold); border-color: rgba(255, 184, 0, 0.2); }
+    .action-icon.chat { background: rgba(59, 130, 246, 0.12); color: #60A5FA; border-color: rgba(59, 130, 246, 0.2); }
+    .action-btn span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .action-btn small {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: -4px;
+    }
+
+    /* Menu Section */
+    .menu-section {
+      padding: 16px 20px;
+      flex: 1;
+    }
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .item-count-badge {
+      font-size: 11.5px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    /* Search & Filter */
+    .search-box {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .search-box input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 12px 18px 12px 42px;
+      color: var(--text);
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus {
+      border-color: var(--accent);
+    }
+    .search-box svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      stroke: var(--text-muted);
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* Category pills */
+    .categories {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .categories::-webkit-scrollbar { display: none; }
+    .cat-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 7px 15px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cat-pill.active {
+      background: var(--accent);
+      color: #0F1210;
+      border-color: var(--accent);
+      font-weight: 700;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    /* Menu Cards */
+    .menu-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .menu-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .menu-card:active {
+      transform: scale(0.99);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .menu-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .menu-header-line {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .menu-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+    .menu-price {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .menu-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .menu-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+    .tag.bestseller {
+      background: rgba(255, 184, 0, 0.15);
+      color: #FFC837;
+      border: 1px solid rgba(255, 184, 0, 0.25);
+    }
+    .tag.vegan {
+      background: rgba(62, 213, 114, 0.15);
+      color: #6EE7B7;
+    }
+    .out-of-stock {
+      opacity: 0.55;
+      filter: grayscale(0.5);
+    }
+    .sold-out-badge {
+      font-size: 10px;
+      background: var(--red);
+      color: #FFFFFF;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Modal / Bottom Sheet */
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .sheet-overlay.open {
+      display: flex;
+      opacity: 1;
+    }
+    .sheet-content {
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 24px 20px 36px;
+      position: relative;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+    }
+    .sheet-overlay.open .sheet-content {
+      transform: translateY(0);
+    }
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      margin: 0 auto 20px;
+    }
+    .sheet-title {
+      font-size: 19px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #FFFFFF;
+    }
+    .sheet-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    /* Wi-Fi Details */
+    .wifi-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .wifi-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .wifi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .wifi-val {
+      font-weight: 700;
+      font-size: 14px;
+      color: #FFFFFF;
+      font-family: monospace;
+    }
+    .qr-container {
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 16px;
+      display: grid;
+      place-items: center;
+    }
+    .qr-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .btn-main {
+      width: 100%;
+      background: var(--accent);
+      color: #0F1210;
+      border: none;
+      border-radius: 999px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px var(--accent-glow);
+      transition: opacity 0.2s;
+    }
+    .btn-main:active { opacity: 0.85; }
+
+    /* Star Rating */
+    .star-picker {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 16px 0 20px;
+    }
+    .star-btn {
+      background: none;
+      border: none;
+      font-size: 30px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.2);
+      transition: transform 0.15s, color 0.15s;
+    }
+    .star-btn.active {
+      color: var(--gold);
+      transform: scale(1.1);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 13.5px;
+      outline: none;
+      font-family: inherit;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+    }
+    textarea.form-input {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Footer Branding */
+    .footer {
+      text-align: center;
+      padding: 24px 20px;
+      color: var(--text-sub);
+      font-size: 12px;
+    }
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer a:hover {
+      color: var(--accent);
+    }
+
+    /* Loading state */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface-card) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Top Hero -->
+  <header class="hero">
+    <div class="top-meta">
+      <div class="table-pill">
+        <span class="status-dot"></span>
+        <span id="table-number-label">Meja NFC Terhubung</span>
+      </div>
+      <div id="outlet-status" style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">
+        Buka Sekarang
+      </div>
+    </div>
+
+    <div class="store-brand">
+      <h1 id="store-title">Kopi Senja</h1>
+      <p id="store-tagline">Slow coffee, warm conversations. Jl. Kemang Raya 21</p>
+    </div>
+  </header>
+
+  <!-- Quick Action Buttons -->
+  <section class="quick-actions">
+    <button class="action-btn" onclick="openWifiModal()">
+      <div class="action-icon wifi">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      </div>
+      <span>Wi-Fi Tamu</span>
+      <small id="quick-wifi-label">1-Tap Connect</small>
+    </button>
+
+    <a class="action-btn" id="google-review-btn" href="#" target="_blank" rel="noopener">
+      <div class="action-icon star">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <span>Google Review</span>
+      <small>Beri Bintang 5</small>
+    </a>
+
+    <button class="action-btn" onclick="openFeedbackModal()">
+      <div class="action-icon chat">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <span>Kritik/Saran</span>
+      <small>Private ke Owner</small>
+    </button>
+  </section>
+
+  <!-- Digital Menu Section -->
+  <main class="menu-section">
+    <div class="section-title-wrap">
+      <h2 class="section-title">Buku Menu Digital</h2>
+      <span class="item-count-badge" id="menu-counter">Memuat menu...</span>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-box">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="menu-search" placeholder="Cari kopi, pasta, dessert..." oninput="handleSearch(this.value)">
+    </div>
+
+    <!-- Categories -->
+    <div class="categories" id="category-bar">
+      <div class="cat-pill active" onclick="filterCategory('all', this)">Semua</div>
+    </div>
+
+    <!-- Menu Items List -->
+    <div class="menu-grid" id="menu-container">
+      <!-- Skeletons while loading -->
+      <div class="menu-card skeleton" style="height: 80px;"></div>
+      <div class="menu-card skeleton" style="height: 80px;"></div>
+      <div class="menu-card skeleton" style="height: 80px;"></div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Powered by <a href="/">Hitabels</a> Smart Table Hub</p>
+    <p style="margin-top: 4px; font-size: 11px;">Sentuh kartu NFC meja kapan saja untuk akses instan</p>
+  </footer>
+</div>
+
+<!-- ================= MODAL WI-FI ================= -->
+<div class="sheet-overlay" id="wifi-sheet" onclick="closeSheet(event, 'wifi-sheet')">
+  <div class="sheet-content">
+    <div class="sheet-handle"></div>
+    <button class="close-btn" onclick="closeSheetDirect('wifi-sheet')">✕</button>
+    <h3 class="sheet-title">Hubungkan ke Wi-Fi</h3>
+    <p class="sheet-desc">Arahkan kamera HP ke QR Code di bawah untuk langsung tersambung otomatis tanpa ketik sandi.</p>
+
+    <div class="qr-container">
+      <canvas id="wifi-qr"></canvas>
+    </div>
+
+    <div class="wifi-card">
+      <div class="wifi-row">
+        <span class="wifi-label">Nama Jaringan (SSID)</span>
+        <span class="wifi-val" id="modal-wifi-ssid">KopiSenja_Guest</span>
+      </div>
+      <div class="wifi-row">
+        <span class="wifi-label">Kata Sandi</span>
+        <span class="wifi-val" id="modal-wifi-pass">senja2026!</span>
+      </div>
+    </div>
+
+    <button class="btn-main" onclick="copyWifiPassword()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <span id="copy-btn-text">Salin Password Wi-Fi</span>
+    </button>
+  </div>
+</div>
+
+<!-- ================= MODAL FEEDBACK ================= -->
+<div class="sheet-overlay" id="feedback-sheet" onclick="closeSheet(event, 'feedback-sheet')">
+  <div class="sheet-content">
+    <div class="sheet-handle"></div>
+    <button class="close-btn" onclick="closeSheetDirect('feedback-sheet')">✕</button>
+    <h3 class="sheet-title">Kritik & Saran Rahasia</h3>
+    <p class="sheet-desc">Pesan Anda dikirim langsung ke pemilik/manajer restoran secara rahasia dan tidak dipublikasikan ke orang lain.</p>
+
+    <form id="feedback-form" onsubmit="submitFeedback(event)">
+      <div style="text-align: center; margin-bottom: 6px;">
+        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Bagaimana pengalaman Anda hari ini?</span>
+        <div class="star-picker" id="star-picker">
+          <button type="button" class="star-btn active" onclick="setRating(1)">★</button>
+          <button type="button" class="star-btn active" onclick="setRating(2)">★</button>
+          <button type="button" class="star-btn active" onclick="setRating(3)">★</button>
+          <button type="button" class="star-btn active" onclick="setRating(4)">★</button>
+          <button type="button" class="star-btn active" onclick="setRating(5)">★</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Nama Anda (Opsional)</label>
+        <input type="text" class="form-input" id="fb-name" placeholder="Boleh dikosongkan (anonim)">
+      </div>
+
+      <div class="form-group">
+        <label>Pesan / Keluhan / Pujian</label>
+        <textarea class="form-input" id="fb-msg" required placeholder="Ceritakan rasa makanan, pelayanan staf, atau kebersihan meja kami..."></textarea>
+      </div>
+
+      <button type="submit" class="btn-main" id="fb-submit-btn">
+        Kirimkan Feedback
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  var STATE = {
+    locationId: null,
+    storeData: {
+      name: 'Kopi Senja',
+      tagline: 'Slow coffee, warm conversations.',
+      wifi_ssid: 'KopiSenja_Guest',
+      wifi_password: 'senja2026!',
+      google_review_url: 'https://maps.google.com'
+    },
+    menuItems: [],
+    selectedCategory: 'all',
+    searchQuery: '',
+    selectedRating: 5
+  };
+
+  // 1. Initial Load
+  window.addEventListener('DOMContentLoaded', async function() {
+    var params = new URLSearchParams(window.location.search);
+    var locParam = params.get('loc') || params.get('id');
+    var tableParam = params.get('table');
+
+    if (tableParam) {
+      document.getElementById('table-number-label').textContent = 'Meja ' + tableParam;
+    }
+
+    await loadData(locParam);
+  });
+
+  async function loadData(locationId) {
+    try {
+      var sb = window.supabaseClient;
+      if (!sb) {
+        console.warn('Supabase client not initialized, using demo data');
+        renderDefaultDemo();
+        return;
+      }
+
+      var locationFound = false;
+
+      // Try fetching from locations table if locationId given
+      if (locationId) {
+        var locRes = await sb.from('locations').select('*').eq('id', locationId).single();
+        if (locRes.data) {
+          STATE.locationId = locRes.data.id;
+          STATE.storeData = {
+            name: locRes.data.name || 'Resto',
+            tagline: locRes.data.address || '',
+            wifi_ssid: locRes.data.wifi_ssid || '',
+            wifi_password: locRes.data.wifi_password || '',
+            google_review_url: locRes.data.google_review_url || ''
+          };
+          locationFound = true;
+
+          // Fetch menu items for this location
+          var menuRes = await sb.from('menu_items').select('*').eq('location_id', locationId).order('sort_order');
+          if (menuRes.data && menuRes.data.length > 0) {
+            STATE.menuItems = menuRes.data;
+          }
+        }
+      }
+
+      // Fallback: Check store_config table or first location
+      if (!locationFound) {
+        var firstLoc = await sb.from('locations').select('*').limit(1);
+        if (firstLoc.data && firstLoc.data.length > 0) {
+          var fl = firstLoc.data[0];
+          STATE.locationId = fl.id;
+          STATE.storeData = {
+            name: fl.name,
+            tagline: fl.address || '',
+            wifi_ssid: fl.wifi_ssid || '',
+            wifi_password: fl.wifi_password || '',
+            google_review_url: fl.google_review_url || ''
+          };
+          var menuRes = await sb.from('menu_items').select('*').eq('location_id', fl.id).order('sort_order');
+          if (menuRes.data && menuRes.data.length > 0) {
+            STATE.menuItems = menuRes.data;
+            locationFound = true;
+          }
+        }
+      }
+
+      // Ultimate fallback: check legacy store_config
+      if (!locationFound) {
+        var cfgRes = await sb.from('store_config').select('*').eq('id', 'default').single();
+        if (cfgRes.data) {
+          var cfg = cfgRes.data;
+          STATE.storeData = {
+            name: cfg.store_name || 'Kopi Senja',
+            tagline: cfg.tagline || '',
+            wifi_ssid: cfg.wifi_ssid || '',
+            wifi_password: cfg.wifi_password || '',
+            google_review_url: cfg.review_link || 'https://maps.google.com'
+          };
+          // Parse menu_text
+          if (cfg.menu_text) {
+            STATE.menuItems = cfg.menu_text.split('\n').filter(Boolean).map(function(line, idx) {
+              var p = line.split('|');
+              return {
+                id: 'm_' + idx,
+                category: p[0] || 'Menu',
+                name: p[1] || 'Item',
+                price: p[2] ? Number(p[2].replace(/[^0-9]/g, '')) : null,
+                description: p[3] || '',
+                tags: p[4] || '',
+                is_available: true
+              };
+            });
+          }
+        }
+      }
+
+      renderPage();
+    } catch (err) {
+      console.error('Error loading data:', err);
+      renderDefaultDemo();
+    }
+  }
+
+  function renderDefaultDemo() {
+    STATE.menuItems = [
+      { id: '1', category: 'Coffee & Drinks', name: 'Kopi Susu Senja', price: 28000, description: 'Double espresso, fresh milk, brown palm sugar syrup.', tags: 'Best seller', is_available: true },
+      { id: '2', category: 'Coffee & Drinks', name: 'Matcha Cloud Latte', price: 34000, description: 'Pure Uji matcha with fresh steamed milk and vanilla foam.', tags: 'Recommended', is_available: true },
+      { id: '3', category: 'Coffee & Drinks', name: 'Long Black (Iced)', price: 24000, description: 'Double shot rich espresso over crystal clear ice.', tags: '', is_available: true },
+      { id: '4', category: 'Brunch & Food', name: 'Smashed Avocado Toast', price: 42000, description: 'Heritage tomatoes, chili flakes, extra virgin olive oil on toasted sourdough.', tags: 'Vegan', is_available: true },
+      { id: '5', category: 'Brunch & Food', name: 'Truffle French Fries', price: 32000, description: 'Shoestring potatoes tossed with black truffle oil and parmesan.', tags: '', is_available: true },
+      { id: '6', category: 'Pastry', name: 'Butter Croissant', price: 22000, description: '36-hour laminated dough, fresh baked every morning.', tags: 'Fresh', is_available: true }
+    ];
+    renderPage();
+  }
+
+  function renderPage() {
+    // 1. Update Hero Details
+    document.getElementById('store-title').textContent = STATE.storeData.name;
+    document.getElementById('store-tagline').textContent = STATE.storeData.tagline;
+    document.title = STATE.storeData.name + ' — Smart Table Hub';
+
+    // Google review link
+    var gBtn = document.getElementById('google-review-btn');
+    if (STATE.storeData.google_review_url) {
+      gBtn.href = STATE.storeData.google_review_url;
+      gBtn.style.display = 'flex';
+    } else {
+      gBtn.href = 'https://maps.google.com';
+    }
+
+    // 2. Categories
+    var categories = ['all'];
+    STATE.menuItems.forEach(function(item) {
+      var cat = item.category || 'Menu';
+      if (!categories.includes(cat)) categories.push(cat);
+    });
+
+    var catBar = document.getElementById('category-bar');
+    catBar.innerHTML = categories.map(function(c) {
+      var label = c === 'all' ? 'Semua' : c;
+      return '<div class="cat-pill ' + (STATE.selectedCategory === c ? 'active' : '') + '" onclick="filterCategory(\'' + c + '\', this)">' + label + '</div>';
+    }).join('');
+
+    renderMenu();
+  }
+
+  function renderMenu() {
+    var filtered = STATE.menuItems.filter(function(item) {
+      var matchCat = (STATE.selectedCategory === 'all') || (item.category === STATE.selectedCategory);
+      var q = STATE.searchQuery.toLowerCase();
+      var matchSearch = !q || (item.name && item.name.toLowerCase().includes(q)) || (item.description && item.description.toLowerCase().includes(q));
+      return matchCat && matchSearch;
+    });
+
+    var countLabel = document.getElementById('menu-counter');
+    countLabel.textContent = filtered.length + ' item';
+
+    var container = document.getElementById('menu-container');
+    if (filtered.length === 0) {
+      container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px 10px;">Tidak ada menu yang sesuai pencarian.</div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(function(item) {
+      var priceStr = item.price ? 'Rp ' + Number(item.price).toLocaleString('id-ID') : '';
+      var tagsHtml = '';
+      if (item.tags) {
+        var tagsList = item.tags.split(',').map(function(t) { return t.trim(); });
+        tagsHtml = tagsList.map(function(t) {
+          var isBest = t.toLowerCase().includes('best') || t.toLowerCase().includes('favorit');
+          var isVeg = t.toLowerCase().includes('vegan');
+          return '<span class="tag ' + (isBest ? 'bestseller' : (isVeg ? 'vegan' : '')) + '">' + t + '</span>';
+        }).join('');
+      }
+
+      var availableClass = item.is_available === false ? 'out-of-stock' : '';
+      var stockBadge = item.is_available === false ? '<span class="sold-out-badge">Habis</span>' : '';
+
+      return '<div class="menu-card ' + availableClass + '">' +
+        '<div class="menu-info">' +
+          '<div class="menu-header-line">' +
+            '<h4 class="menu-name">' + item.name + '</h4>' +
+            '<div class="menu-price">' + (stockBadge || priceStr) + '</div>' +
+          '</div>' +
+          (item.description ? '<p class="menu-desc">' + item.description + '</p>' : '') +
+          (tagsHtml ? '<div class="menu-tags">' + tagsHtml + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function filterCategory(cat, el) {
+    STATE.selectedCategory = cat;
+    document.querySelectorAll('.cat-pill').forEach(function(p) { p.classList.remove('active'); });
+    el.classList.add('active');
+    renderMenu();
+  }
+
+  function handleSearch(val) {
+    STATE.searchQuery = val.trim();
+    renderMenu();
+  }
+
+  // Wi-Fi Modal & QR
+  function openWifiModal() {
+    document.getElementById('modal-wifi-ssid').textContent = STATE.storeData.wifi_ssid || 'Belum diatur';
+    document.getElementById('modal-wifi-pass').textContent = STATE.storeData.wifi_password || '-';
+
+    var qrCodeStr = 'WIFI:T:WPA;S:' + (STATE.storeData.wifi_ssid || '') + ';P:' + (STATE.storeData.wifi_password || '') + ';;';
+    var canvas = document.getElementById('wifi-qr');
+    if (window.QRCode) {
+      QRCode.toCanvas(canvas, qrCodeStr, {
+        width: 180,
+        margin: 1,
+        color: { dark: '#121512', light: '#FFFFFF' }
+      });
+    }
+
+    document.getElementById('wifi-sheet').classList.add('open');
+  }
+
+  function copyWifiPassword() {
+    var pass = STATE.storeData.wifi_password || '';
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(pass).then(function() {
+        var btnText = document.getElementById('copy-btn-text');
+        btnText.textContent = '✓ Password Tersalin!';
+        setTimeout(function() { btnText.textContent = 'Salin Password Wi-Fi'; }, 2500);
+      });
+    }
+  }
+
+  // Feedback Modal
+  function openFeedbackModal() {
+    document.getElementById('feedback-sheet').classList.add('open');
+  }
+
+  function setRating(val) {
+    STATE.selectedRating = val;
+    var stars = document.querySelectorAll('#star-picker .star-btn');
+    stars.forEach(function(btn, idx) {
+      if (idx < val) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+  }
+
+  async function submitFeedback(e) {
+    e.preventDefault();
+    var name = document.getElementById('fb-name').value.trim();
+    var msg = document.getElementById('fb-msg').value.trim();
+    var btn = document.getElementById('fb-submit-btn');
+
+    if (!msg) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Mengirimkan...';
+
+    try {
+      var sb = window.supabaseClient;
+      if (sb) {
+        var payload = {
+          message: msg,
+          author_name: name || 'Anonim',
+          rating: STATE.selectedRating,
+          source: 'nfc',
+          status: 'new'
+        };
+        if (STATE.locationId && STATE.locationId !== 'default') {
+          payload.location_id = STATE.locationId;
+        }
+        await sb.from('feedback').insert(payload);
+      }
+
+      btn.textContent = '✓ Berhasil Terkirim!';
+      setTimeout(function() {
+        closeSheetDirect('feedback-sheet');
+        btn.disabled = false;
+        btn.textContent = 'Kirimkan Feedback';
+        document.getElementById('feedback-form').reset();
+      }, 1500);
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      alert('Gagal mengirimkan feedback: ' + err.message);
+      btn.disabled = false;
+      btn.textContent = 'Kirimkan Feedback';
+    }
+  }
+
+  function closeSheet(e, id) {
+    if (e.target.id === id) {
+      document.getElementById(id).classList.remove('open');
+    }
+  }
+  function closeSheetDirect(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+</script>
+
+</body>
+</html>

@@ -280,6 +280,10 @@
     <div class="topbar">
       <button class="icon-btn menu-toggle" id="menu-toggle" onclick="document.getElementById('app').classList.toggle('nav-open')"></button>
       <label class="search" id="global-search"></label>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <a class="btn sm" href="/" target="_blank">🌐 Lihat Landing Page</a>
+        <a class="btn sm primary" href="/hub" target="_blank">📱 Demo Hub Meja</a>
+      </div>
     </div>
     <div class="page-head" id="page-head"></div>
     <div class="content" id="content"></div>
@@ -680,17 +684,20 @@
       S.clients.map(function (c) { return '<option value="' + c.id + '" ' + (S.locClient === c.id ? 'selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select>' +
       '<button class="btn primary" onclick="locationForm()">' + icon('plus') + 'Tambah lokasi</button>');
     var rows = S.locations.filter(function (l) { return (!S.locClient || l.client_id === S.locClient) && matches(l, ['name', 'address', 'wifi_ssid']); });
-    var body = rows.length ? '<div class="table-wrap"><table><thead><tr><th>Lokasi</th><th>Klien</th><th>Wi-Fi</th><th>Google Review</th><th>Menu</th><th>Status</th><th></th></tr></thead><tbody>' +
+    var body = rows.length ? '<div class="table-wrap"><table><thead><tr><th>Lokasi</th><th>Klien</th><th>Wi-Fi</th><th>Google Review</th><th>Menu</th><th>Status</th><th>Hub Meja (NFC)</th><th></th></tr></thead><tbody>' +
       rows.map(function (l) {
         var c = clientById(l.client_id), items = S.menu.filter(function (i) { return i.location_id === l.id; }).length;
         var wifi = l.wifi_ssid ? '<div class="name">' + esc(l.wifi_ssid) + '</div><div class="secret sub-text"><span class="mono" data-secret="' + esc(l.wifi_password) + '">••••••••</span>' +
           (l.wifi_password ? '<button title="Lihat" onclick="toggleSecret(this)">' + icon('eye') + '</button><button title="Salin" onclick="copyText(this.parentNode.querySelector(\'[data-secret]\').dataset.secret)">' + icon('copy') + '</button>' : '') + '</div>' : '<span class="muted">Belum diatur</span>';
         var g = writeReviewUrl(l);
         var google = g ? '<a class="btn sm" href="' + esc(g) + '" target="_blank" rel="noopener">' + icon('ext') + 'Buka</a>' : '<span class="muted">—</span>';
+        var hubUrl = '/hub?loc=' + encodeURIComponent(l.id);
+        var hubAction = '<div style="display:flex;gap:6px;align-items:center;"><a class="btn sm" href="' + esc(hubUrl) + '" target="_blank">' + icon('ext') + 'Buka</a><button class="icon-btn" title="Salin Link NFC" onclick="copyText(window.location.origin + \'' + hubUrl + '\'); toast(\'Link NFC disalin!\')">' + icon('copy') + '</button></div>';
         return '<tr><td><div class="name">' + esc(l.name) + '</div><div class="sub-text">' + esc(l.address || '—') + '</div></td>' +
           '<td>' + esc(c ? c.name : '—') + '</td><td>' + wifi + '</td><td>' + google + '</td>' +
           '<td><button class="btn sm" onclick="S.menuLoc=\'' + l.id + '\';go(\'menu\')">' + icon('menu') + items + ' item</button></td>' +
           '<td><span class="pill ' + (l.is_active ? 'green' : 'red') + '">' + (l.is_active ? 'Aktif' : 'Nonaktif') + '</span></td>' +
+          '<td>' + hubAction + '</td>' +
           '<td><div class="actions"><button class="icon-btn" title="Edit" onclick="locationForm(\'' + l.id + '\')">' + icon('edit') + '</button><button class="icon-btn danger" title="Hapus" onclick="deleteLocation(\'' + l.id + '\')">' + icon('trash') + '</button></div></td></tr>';
       }).join('') + '</tbody></table></div>'
       : '<div class="empty"><b>' + (S.clients.length ? 'Belum ada lokasi' : 'Tambah klien dulu') + '</b>' + (S.clients.length ? 'Klik "Tambah lokasi" untuk menambahkan outlet.' : 'Setiap lokasi harus milik satu klien.') + '</div>';

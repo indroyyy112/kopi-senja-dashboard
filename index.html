@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hitabels — Smart NFC Table Card & Hub untuk Kafe & Restoran</title>
+  <meta name="description" content="Tingkatkan omset dan ulasan bintang 5 kafe Anda dengan Hitabels. Sambung Wi-Fi 1-tap, buku menu digital interaktif, dan booster Google Review tanpa perlu download aplikasi.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090B09;
+      --surface: #121613;
+      --surface-card: #181E19;
+      --surface-hover: #1E2620;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(62, 213, 114, 0.3);
+      --text: #F0F4F0;
+      --text-muted: #95A196;
+      --text-sub: #667367;
+      --accent: #3ED572;
+      --accent-glow: rgba(62, 213, 114, 0.25);
+      --gold: #FFB800;
+      --gold-glow: rgba(255, 184, 0, 0.2);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --font: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient glow backgrounds */
+    .bg-glow-1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(62, 213, 114, 0.12) 0%, transparent 70%);
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bg-glow-2 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 184, 0, 0.08) 0%, transparent 70%);
+      top: 600px;
+      right: -100px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Navbar */
+    .navbar {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(9, 11, 9, 0.85);
+      backdrop-filter: blur(16px);
+      z-index: 50;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #fff;
+    }
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3ED572, #1C7438);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    .brand-name {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .brand-name span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #fff; }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13.5px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+    .btn-ghost:hover {
+      background: var(--surface);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #090B09;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(62, 213, 114, 0.4);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 90px 0 60px;
+      text-align: center;
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(62, 213, 114, 0.1);
+      border: 1px solid var(--border-accent);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .badge-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+    .hero h1 {
+      font-size: clamp(34px, 5.5vw, 62px);
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      line-height: 1.15;
+      max-width: 860px;
+      margin: 0 auto 20px;
+    }
+    .hero h1 span.gradient {
+      background: linear-gradient(135deg, #FFFFFF 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: clamp(16px, 2vw, 19px);
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 50px;
+    }
+    .btn-lg {
+      padding: 15px 32px;
+      font-size: 15.5px;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 32px;
+      max-width: 960px;
+      margin: 0 auto 80px;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .stat-val span { color: var(--accent); }
+    .stat-label {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* Live Interactive Demo Section */
+    .demo-section {
+      padding: 40px 0 100px;
+    }
+    .section-header {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 50px;
+    }
+    .section-tag {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.25;
+      margin-bottom: 14px;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .demo-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .demo-content h3 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+    .demo-features {
+      list-style: none;
+      display: grid;
+      gap: 16px;
+      margin: 24px 0 32px;
+    }
+    .demo-feature-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .demo-icon-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(62, 213, 114, 0.15);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      flex: none;
+      font-size: 12px;
+      font-weight: 900;
+      margin-top: 2px;
+    }
+    .demo-feature-text b {
+      display: block;
+      color: #fff;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+    .demo-feature-text span {
+      color: var(--text-muted);
+      font-size: 13.5px;
+    }
+
+    /* Phone Mockup Frame */
+    .mockup-container {
+      display: flex;
+      justify-content: center;
+      position: relative;
+    }
+    .phone-frame {
+      width: 320px;
+      height: 620px;
+      background: #000;
+      border-radius: 44px;
+      border: 8px solid #232A24;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(62, 213, 114, 0.15);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone-notch {
+      width: 120px;
+      height: 20px;
+      background: #232A24;
+      border-radius: 0 0 14px 14px;
+      margin: 0 auto;
+      z-index: 10;
+    }
+    .phone-screen {
+      flex: 1;
+      background: #0F1210;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: #F3F5F2;
+      font-size: 12px;
+    }
+    .phone-screen::-webkit-scrollbar { width: 3px; }
+    .phone-screen::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 999px; }
+
+    /* Interactive Tap Badge in Mockup */
+    .nfc-tap-simulator {
+      background: rgba(62, 213, 114, 0.12);
+      border: 1px dashed var(--accent);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      animation: gentle-glow 2s infinite;
+      transition: transform 0.2s;
+    }
+    .nfc-tap-simulator:hover { transform: scale(1.02); }
+    @keyframes gentle-glow {
+      0%, 100% { box-shadow: 0 0 0 rgba(62, 213, 114, 0); }
+      50% { box-shadow: 0 0 16px var(--accent-glow); }
+    }
+
+    /* Features Grid */
+    .features-section {
+      padding: 80px 0;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .feature-card:hover {
+      background: var(--surface-hover);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-4px);
+    }
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 22px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .feature-icon.green { background: rgba(62, 213, 114, 0.12); color: var(--accent); border-color: var(--border-accent); }
+    .feature-icon.gold { background: rgba(255, 184, 0, 0.12); color: var(--gold); border-color: rgba(255, 184, 0, 0.3); }
+    .feature-icon.blue { background: rgba(59, 130, 246, 0.12); color: #60A5FA; border-color: rgba(59, 130, 246, 0.3); }
+    .feature-card h4 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      margin-bottom: 10px;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Pricing Section */
+    .pricing-section {
+      padding: 80px 0;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 30px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .price-card.featured {
+      background: linear-gradient(180deg, rgba(62, 213, 114, 0.08) 0%, var(--surface) 100%);
+      border-color: var(--accent);
+      box-shadow: 0 10px 40px rgba(62, 213, 114, 0.12);
+    }
+    .featured-ribbon {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #090B09;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 4px 14px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .plan-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .plan-sub {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    .plan-price {
+      font-size: 34px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+    .plan-price span {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .plan-list {
+      list-style: none;
+      display: grid;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex: 1;
+    }
+    .plan-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+    }
+    .plan-list li svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent);
+      flex: none;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      padding: 80px 0;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .faq-question {
+      padding: 18px 22px;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .faq-answer {
+      padding: 0 22px 18px;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
+    .faq-item.open .faq-answer { display: block; }
+    .faq-item.open .faq-icon { transform: rotate(180deg); }
+    .faq-icon { transition: transform 0.2s; }
+
+    /* CTA Bottom Banner */
+    .cta-banner {
+      background: radial-gradient(circle at 50% 0%, rgba(62, 213, 114, 0.2), transparent 70%), var(--surface);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius);
+      padding: 64px 32px;
+      text-align: center;
+      margin: 60px 0 100px;
+    }
+    .cta-banner h2 {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+    .cta-banner p {
+      color: var(--text-muted);
+      max-width: 580px;
+      margin: 0 auto 32px;
+      font-size: 16px;
+    }
+
+    /* Footer */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .demo-wrapper { grid-template-columns: 1fr; padding: 32px 20px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-glow-1"></div>
+<div class="bg-glow-2"></div>
+
+<!-- Top Navigation -->
+<header class="navbar">
+  <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
+    <a href="/" class="brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+          <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+      </div>
+      <div class="brand-name">Hita<span>bels</span></div>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#fitur">Fitur Unggulan</a></li>
+      <li><a href="#demo">Demo Interaktif</a></li>
+      <li><a href="#harga">Paket Harga</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="/hub" target="_blank" style="color: var(--accent);">📱 Coba Hub Meja</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="/admin" class="btn btn-ghost">Dashboard Admin</a>
+      <a href="https://wa.me/6281234567890?text=Halo%20Hitabels,%20saya%20tertarik%20untuk%20pesan%20kartu%20smart%20NFC%20meja%20untuk%20kafe%20saya" target="_blank" class="btn btn-primary">Pesan Sekarang</a>
+    </div>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <div class="badge-pill">
+      <span class="dot"></span>
+      Solusi Smart NFC Table Card #1 untuk F&B Modern
+    </div>
+
+    <h1>
+      Ubah Setiap Meja Restoran Jadi <br>
+      <span class="gradient">Mesin Review & Layanan Otomatis</span>
+    </h1>
+
+    <p>
+      Tinggalkan buku menu lusuh dan pelayan yang berulang kali ditanya password Wi-Fi. 
+      Cukup tempelkan smartphone ke kartu meja Hitabels untuk konek Wi-Fi 1 detik, buka menu digital, dan dongkrak ulasan bintang 5 Google Maps Anda.
+    </p>
+
+    <div class="hero-cta">
+      <a href="https://wa.me/6281234567890?text=Halo%20Hitabels,%20saya%20ingin%20konsultasi%20kartu%20NFC%20meja" target="_blank" class="btn btn-primary btn-lg">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+        Pesan Kartu NFC Meja
+      </a>
+      <a href="#demo" class="btn btn-ghost btn-lg">
+        Lihat Demo Interaktif ↓
+      </a>
+    </div>
+
+    <!-- Quick Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-val">1 <span>Detik</span></div>
+        <div class="stat-label">Konek Wi-Fi Otomatis</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">+350<span>%</span></div>
+        <div class="stat-label">Kenaikan Ulasan Google</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">0 <span>App</span></div>
+        <div class="stat-label">Tanpa Perlu Download</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">100<span>%</span></div>
+        <div class="stat-label">Support iPhone & Android</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Interactive Live Demo Section -->
+<section class="demo-section" id="demo">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Pengalaman Nyata Pelanggan</span>
+      <h2 class="section-title">Sentuh Meja, Rasakan Kemudahannya</h2>
+      <p class="section-sub">Inilah yang dilihat pengunjung kafe saat menempelkan smartphone mereka ke kartu Hitabels di atas meja.</p>
+    </div>
+
+    <div class="demo-wrapper">
+      <div class="demo-content">
+        <h3>1 Kartu Akrilik, Segudang Manfaat</h3>
+        <p style="color: var(--text-muted); line-height: 1.6;">
+          Dibuat khusus untuk efisiensi operasional kafe, resto, dan bar. Pengunjung tidak lagi berebut password Wi-Fi, dan Anda mengumpulkan ratusan review bintang 5 setiap minggunya.
+        </p>
+
+        <ul class="demo-features">
+          <li class="demo-feature-item">
+            <div class="demo-icon-check">✓</div>
+            <div class="demo-feature-text">
+              <b>Wi-Fi 1-Tap & QR Fallback</b>
+              <span>Pelanggan langsung tersambung tanpa perlu repot mengetik password manual.</span>
+            </div>
+          </li>
+          <li class="demo-feature-item">
+            <div class="demo-icon-check">✓</div>
+            <div class="demo-feature-text">
+              <b>Buku Menu Digital Real-time</b>
+              <span>Ubah harga atau tandai menu habis dari dashboard Anda, seketika terupdate di semua meja.</span>
+            </div>
+          </li>
+          <li class="demo-feature-item">
+            <div class="demo-icon-check">✓</div>
+            <div class="demo-feature-text">
+              <b>Google Review Booster</b>
+              <span>Arahkan pelanggan yang puas langsung membuka halaman ulasan Google Maps kafe Anda.</span>
+            </div>
+          </li>
+          <li class="demo-feature-item">
+            <div class="demo-icon-check">✓</div>
+            <div class="demo-feature-text">
+              <b>Kotak Feedback Pribadi</b>
+              <span>Keluhan pelanggan tersampaikan langsung ke dashboard Anda tanpa viral di media sosial.</span>
+            </div>
+          </li>
+        </ul>
+
+        <a href="/hub" target="_blank" class="btn btn-primary" style="gap: 8px;">
+          Buka Tampilan Layar Penuh di HP Anda
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+      </div>
+
+      <!-- Smartphone Preview -->
+      <div class="mockup-container">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <!-- Simulated NFC Tap Banner -->
+            <div class="nfc-tap-simulator" onclick="simTap()">
+              <div style="font-weight: 800; color: var(--accent); font-size: 11px;">✨ SIMULASI TAP NFC MEJA</div>
+              <div style="color: #fff; font-size: 11px; margin-top: 2px;">Klik di sini untuk tes respon NFC</div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+              <span style="background: rgba(62,213,114,0.15); color: var(--accent); padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 10px;">MEJA 04 TERHUBUNG</span>
+              <span style="color: var(--text-muted); font-size: 11px;">Kopi Senja</span>
+            </div>
+
+            <div>
+              <div style="font-weight: 800; font-size: 18px; color: #fff;">Kopi Senja</div>
+              <div style="color: var(--text-muted); font-size: 11.5px;">Slow coffee, warm conversations.</div>
+            </div>
+
+            <!-- Mini Quick Actions -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+              <div style="background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center;">
+                <div style="color: var(--accent); font-size: 14px; margin-bottom: 2px;">📶</div>
+                <b style="font-size: 10px; display: block;">Wi-Fi Tamu</b>
+                <span style="font-size: 8.5px; color: var(--text-muted);">1-Tap Connect</span>
+              </div>
+              <div style="background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center;">
+                <div style="color: var(--gold); font-size: 14px; margin-bottom: 2px;">⭐</div>
+                <b style="font-size: 10px; display: block;">Review</b>
+                <span style="font-size: 8.5px; color: var(--text-muted);">Bintang 5</span>
+              </div>
+              <div style="background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center;">
+                <div style="color: #60A5FA; font-size: 14px; margin-bottom: 2px;">💬</div>
+                <b style="font-size: 10px; display: block;">Feedback</b>
+                <span style="font-size: 8.5px; color: var(--text-muted);">Ke Manajer</span>
+              </div>
+            </div>
+
+            <!-- Mini Menu Cards -->
+            <div style="font-weight: 800; font-size: 13px; margin-top: 6px;">Menu Favorit Hari Ini</div>
+
+            <div style="background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; justify-content: space-between;">
+              <div>
+                <b style="color: #fff; font-size: 12px;">Kopi Susu Senja</b>
+                <div style="color: var(--text-muted); font-size: 10px;">Double espresso, gula aren segar</div>
+                <span style="background: rgba(255,184,0,0.15); color: #FFC837; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; margin-top: 4px; display: inline-block;">Best Seller</span>
+              </div>
+              <b style="color: var(--accent); font-size: 12px;">Rp 28.000</b>
+            </div>
+
+            <div style="background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; justify-content: space-between;">
+              <div>
+                <b style="color: #fff; font-size: 12px;">Matcha Cloud Latte</b>
+                <div style="color: var(--text-muted); font-size: 10px;">Pure Uji matcha & sweet vanilla foam</div>
+              </div>
+              <b style="color: var(--accent); font-size: 12px;">Rp 34.000</b>
+            </div>
+
+            <div style="background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; justify-content: space-between;">
+              <div>
+                <b style="color: #fff; font-size: 12px;">Butter Croissant</b>
+                <div style="color: var(--text-muted); font-size: 10px;">Freshly baked flaky French pastry</div>
+              </div>
+              <b style="color: var(--accent); font-size: 12px;">Rp 22.000</b>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Grid -->
+<section class="features-section" id="fitur">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Keunggulan Utama</span>
+      <h2 class="section-title">Teknologi Meja Tercanggih untuk Kafe Anda</h2>
+      <p class="section-sub">Semua yang Anda butuhkan untuk meningkatkan kepuasan pelanggan dan efisiensi tim.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon green">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        </div>
+        <h4>Sambung Wi-Fi Sekali Sentuh</h4>
+        <p>Tidak ada lagi kertas sandi lusuh di kasir atau pengunjung memanggil pelayan hanya untuk menanyakan huruf besar-kecil password Wi-Fi.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon gold">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <h4>Booster Ulasan Google Bintang 5</h4>
+        <p>Tingkatkan peringkat kafe Anda di Google Search & Maps. Arahkan pengunjung setia langsung ke form bintang 5 hanya dengan 1 tap.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon blue">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        </div>
+        <h4>Buku Menu Digital Real-Time</h4>
+        <p>Hemat jutaan rupiah biaya cetak buku menu. Update harga, ganti deskripsi, atau sembunyikan menu yang sedang habis dari dashboard kapan saja.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon green">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h4>Kotak Masukan Rahasia</h4>
+        <p>Cegah ulasan buruk di media sosial. Pengunjung dapat menyampaikan keluhan rasa makanan atau servis langsung ke pemilik secara privat.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon gold">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <h4>Dashboard Manajemen Multi-Klien</h4>
+        <p>Satu dashboard terpadu untuk memantau performa, kelola banyak outlet/cabang sekaligus, dan membaca seluruh rekapan feedback tamu.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon blue">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <h4>Akrilik Tahan Air & Panas</h4>
+        <p>Kartu meja Hitabels dicetak menggunakan akrilik matte berkualitas tinggi, anti-gores, dan tahan tumpahan kopi maupun air es.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Plans -->
+<section class="pricing-section" id="harga">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Pilihan Paket</span>
+      <h2 class="section-title">Investasi Cerdas untuk Kafe Anda</h2>
+      <p class="section-sub">Pilih paket kartu NFC meja yang sesuai dengan ukuran bisnis dan jumlah meja Anda.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Plan 1 -->
+      <div class="price-card">
+        <h4 class="plan-title">Paket Starter</h4>
+        <p class="plan-sub">Cocok untuk kedai kopi kecil atau booth bistro.</p>
+        <div class="plan-price">Rp 299.000 <span>/ sekali bayar</span></div>
+        <ul class="plan-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> 5 Kartu Meja NFC Akrilik</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Hub Meja Digital & Menu</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Wi-Fi 1-Tap Connect</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Akses Dashboard Admin</li>
+        </ul>
+        <a href="https://wa.me/6281234567890?text=Halo%20Hitabels,%20saya%20mau%20pesan%20Paket%20Starter" target="_blank" class="btn btn-ghost">Pilih Starter</a>
+      </div>
+
+      <!-- Plan 2 (Featured) -->
+      <div class="price-card featured">
+        <div class="featured-ribbon">Paling Populer</div>
+        <h4 class="plan-title">Paket Kafe Populer</h4>
+        <p class="plan-sub">Pilihan favorit untuk kafe & restoran sedang.</p>
+        <div class="plan-price">Rp 699.000 <span>/ sekali bayar</span></div>
+        <ul class="plan-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> <b>15 Kartu Meja NFC Premium</b></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom Logo & Warna Kafe</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Google Review Booster Otomatis</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Kotak Saran Privat ke Owner</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Support Prioritas & Garansi Chip</li>
+        </ul>
+        <a href="https://wa.me/6281234567890?text=Halo%20Hitabels,%20saya%20mau%20pesan%20Paket%20Kafe%20Populer" target="_blank" class="btn btn-primary">Pesan Paket Populer</a>
+      </div>
+
+      <!-- Plan 3 -->
+      <div class="price-card">
+        <h4 class="plan-title">Paket Multi-Cabang</h4>
+        <p class="plan-sub">Untuk restoran besar atau jaringan franchise.</p>
+        <div class="plan-price">Rp 1.499.000 <span>/ sekali bayar</span></div>
+        <ul class="plan-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> <b>35+ Kartu Meja NFC Akrilik</b></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Multi-Outlet Management</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Desain Bentuk Akrilik Kustom</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Integrasi Khusus & Dedicated CS</li>
+        </ul>
+        <a href="https://wa.me/6281234567890?text=Halo%20Hitabels,%20saya%20mau%20pesan%20Paket%20Multi-Cabang" target="_blank" class="btn btn-ghost">Hubungi Enterprise</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="section-header">
+    <span class="section-tag">Tanya Jawab</span>
+    <h2 class="section-title">Pertanyaan yang Sering Diajukan</h2>
+  </div>
+
+  <div class="faq-item open">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      Apakah pengunjung harus mendownload aplikasi terlebih dahulu?
+      <span class="faq-icon">▾</span>
+    </div>
+    <div class="faq-answer">
+      Sama sekali tidak! Ketika pengunjung menempelkan HP ke kartu meja Hitabels, browser bawaan (Safari di iPhone, Chrome di Android) langsung otomatis terbuka menampilkan hub meja kafe Anda.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      Bagaimana jika HP pengunjung tidak memiliki sensor NFC?
+      <span class="faq-icon">▾</span>
+    </div>
+    <div class="faq-answer">
+      Setiap kartu meja Hitabels sudah dilengkapi dengan kode QR beresolusi tinggi di samping chip NFC. Jadi 100% semua jenis smartphone berkamera tetap bisa mengaksesnya dengan mudah.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      Jika saya ganti password Wi-Fi atau mengubah harga menu, apakah harus ganti kartu?
+      <span class="faq-icon">▾</span>
+    </div>
+    <div class="faq-answer">
+      Tidak perlu ganti kartu! Anda cukup masuk ke Dashboard Admin Hitabels, ganti password Wi-Fi atau harga menu di sana, dan dalam hitungan detik semua kartu di meja sudah langsung otomatis terupdate.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      Bagaimana proses pemesanannya?
+      <span class="faq-icon">▾</span>
+    </div>
+    <div class="faq-answer">
+      Cukup klik tombol "Pesan Sekarang" untuk terhubung dengan tim kami via WhatsApp. Kami akan meminta nama kafe, logo, serta daftar menu untuk disiapkan sebelum kartu dicetak dan dikirim ke alamat Anda.
+    </div>
+  </div>
+</section>
+
+<!-- Bottom CTA Banner -->
+<div class="container">
+  <div class="cta-banner">
+    <h2>Siap Modernisasi Meja Resto Anda?</h2>
+    <p>Bergabunglah dengan ratusan kafe modern yang telah meningkatkan omset dan ulasan Google dengan kartu pintar Hitabels.</p>
+    <a href="https://wa.me/6281234567890?text=Halo%20Hitabels,%20saya%20siap%20pesan%20kartu%20NFC%20meja" target="_blank" class="btn btn-primary btn-lg">
+      Konsultasi Gratis via WhatsApp
+    </a>
+  </div>
+</div>
+
+<!-- Site Footer -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-row">
+      <div class="brand">
+        <div class="brand-icon" style="width:32px; height:32px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        </div>
+        <div class="brand-name" style="font-size: 18px;">Hita<span>bels</span></div>
+      </div>
+
+      <ul class="footer-links">
+        <li><a href="/hub">Demo Hub Meja</a></li>
+        <li><a href="/admin">Dashboard Admin</a></li>
+        <li><a href="#fitur">Fitur</a></li>
+        <li><a href="#harga">Harga</a></li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; font-size: 12px; color: var(--text-sub);">
+      &copy; 2026 Hitabels. All rights reserved. Next-Gen Smart NFC Table Solutions.
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleFaq(el) {
+    var item = el.parentElement;
+    item.classList.toggle('open');
+  }
+
+  function simTap() {
+    alert('✨ Kartu NFC Berhasil Terbaca! Pengunjung langsung diarahkan ke Hub Kafe.');
+  }
+</script>
+
+</body>
+</html>
